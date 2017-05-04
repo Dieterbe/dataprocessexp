@@ -13,6 +13,27 @@ NOT included:
 
 
 ## dieters conclusions:
+confirming memory usage:
+```
+go test -run='^$' -bench='^(BenchmarkSumMT|BenchmarkSumLM)$' -memprofile=yes2
+BenchmarkSumMT-8   	200000000	         8.00 ns/op
+BenchmarkSumLM-8   	300000000	         5.39 ns/op
+PASS
+ok  	github.com/raintank/dataprocessexp	94.226s
+~/g/s/g/r/dataprocessexp ❯❯❯ go tool pprof dataprocessexp.test yes2                                                                                                                          ⏎
+Entering interactive mode (type "help" for commands)
+(pprof) top30
+5.22GB of 5.22GB total (  100%)
+      flat  flat%   sum%        cum   cum%
+    2.98GB 57.14% 57.14%     2.98GB 57.14%  github.com/raintank/dataprocessexp.sumMT
+    2.24GB 42.86%   100%     2.24GB 42.86%  github.com/raintank/dataprocessexp.sumLM
+         0     0%   100%     2.24GB 42.86%  github.com/raintank/dataprocessexp.BenchmarkSumLM
+         0     0%   100%     2.98GB 57.14%  github.com/raintank/dataprocessexp.BenchmarkSumMT
+         0     0%   100%     5.22GB   100%  runtime.goexit
+         0     0%   100%     5.22GB   100%  testing.(*B).launch
+         0     0%   100%     5.22GB   100%  testing.(*B).runN
+```
+* confirms LM uses less memory than MT
 
 
 ```
@@ -28,6 +49,7 @@ PASS
 ok  	github.com/raintank/dataprocessexp	170.445s
 ```
 
+* confirms LM uses less cpu than MT
 * using an interface results in too much overhead.  Remember the benchmarks are per point. Let's say you have requests processing 400 series of each 10k points, and you have 5 functions in a row. do many requsets at the same time, and the spent cpu time quickly adds up!
 * LM style is most efficient, in memory and cpu.  We should base our processing api's on this datatype. Data fed into the library by callers such as grafana or metrictank should be in this format.  applying this style also internally in those applications is recommended, but optional as far as the processing library is concerned.
 * While MT stores chunks as a sequence of (ts, val) pairs (allowing for sparse data),
